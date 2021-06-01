@@ -101,7 +101,6 @@
             "name": "[parameters('hubNetwork').name]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('bastionHost').nsgName)]",
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRoutes').tableName)]"
             ],
             "properties": {
@@ -130,12 +129,10 @@
                         }
                     }
                 ]
-            },
-            "resources": [
-                         ]
-                    }
+            }
+          
                 
-            ]
+        
         },
         {
             "comments": "Spoke virtual network, subnet, and diagnostic configuration",
