@@ -73,14 +73,6 @@
                 "probeName": "lb-probe"
             }
         },
-        "workbookDisplayName": {
-            "type": "string",
-            "defaultValue": "Azure Firewall Workbook"
-        },
-        "workbookId": {
-            "type": "string",
-            "defaultValue": "[guid(resourceGroup().id)]"
-        },
         "location": {
             "type": "string",
             "defaultValue": "[resourceGroup().location]"
@@ -95,12 +87,13 @@
     },
     "resources": [
         {
-            "comments": "Hub virtual network",
+            "comments": "Hub virtual network and diagnostic configuration",
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2020-05-01",
             "name": "[parameters('hubNetwork').name]",
             "location": "[parameters('location')]",
             "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('bastionHost').nsgName)]",
                 "[resourceId('Microsoft.Network/routeTables', parameters('gatewayRoutes').tableName)]"
             ],
             "properties": {
@@ -130,9 +123,6 @@
                     }
                 ]
             }
-          
-                
-        
         },
         {
             "comments": "Spoke virtual network, subnet, and diagnostic configuration",
@@ -324,31 +314,7 @@
                         }
                     }
                 ]
-            },
-            "resources": [
-                {
-                    "type": "providers/diagnosticSettings",
-                    "apiVersion": "2017-05-01-preview",
-                    "name": "[concat('Microsoft.Insights/default', variables('logAnalyticsWorkspace'))]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('bastionHost').nsgName)]",
-                        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspace'))]"
-                    ],
-                    "properties": {
-                        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspace'))]",
-                        "logs": [
-                            {
-                                "category": "NetworkSecurityGroupEvent",
-                                "enabled": true
-                            },
-                            {
-                                "category": "NetworkSecurityGroupRuleCounter",
-                                "enabled": true
-                            }
-                        ]
-                    }
-                }
-            ]
+            }
         },
         {
             "comments": "Public IP address for VPN Gateway",
@@ -394,43 +360,7 @@
                 "gatewayType": "Vpn",
                 "vpnType": "RouteBased",
                 "enableBgp": false
-            },
-            "resources": [
-                {
-                    "condition": "[parameters('configureSitetosite')]",
-                    "type": "providers/diagnosticSettings",
-                    "apiVersion": "2017-05-01-preview",
-                    "name": "[concat('Microsoft.Insights/default', variables('logAnalyticsWorkspace'))]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Network/virtualNetworkGateways', parameters('vpnGateway').name)]"
-                    ],
-                    "properties": {
-                        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspace'))]",
-                        "logs": [
-                            {
-                                "category": "GatewayDiagnosticLog",
-                                "enabled": true
-                            },
-                            {
-                                "category": "TunnelDiagnosticLog",
-                                "enabled": true
-                            },
-                            {
-                                "category": "RouteDiagnosticLog",
-                                "enabled": true
-                            },
-                            {
-                                "category": "IKEDiagnosticLog",
-                                "enabled": true
-                            },
-                            {
-                                "category": "P2SDiagnosticLog",
-                                "enabled": true
-                            }
-                        ]
-                    }
-                }
-            ]
+            }
         },
         {
             "comments": "Public IP address for Azure Firewall",
@@ -453,31 +383,7 @@
             "location": "[parameters('location')]",
             "properties": {
                 
-             },
-            "resources": [
-                {
-                    "type": "providers/diagnosticSettings",
-                    "apiVersion": "2017-05-01-preview",
-                    "name": "[concat('Microsoft.Insights/default', variables('logAnalyticsWorkspace'))]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('spokeNetwork').subnetNsgName)]",
-                        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspace'))]"
-                    ],
-                    "properties": {
-                        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspace'))]",
-                        "logs": [
-                            {
-                                "category": "NetworkSecurityGroupEvent",
-                                "enabled": true
-                            },
-                            {
-                                "category": "NetworkSecurityGroupRuleCounter",
-                                "enabled": true
-                            }
-                        ]
-                    }
-                }
-            ]
+             }
         },
         {
             "type": "Microsoft.Network/networkInterfaces",
@@ -685,29 +591,8 @@
                         }
                     }
                 ]
-            },
-            "resources": [
-                {
-                    "type": "providers/diagnosticSettings",
-                    "apiVersion": "2017-05-01-preview",
-                    "name": "[concat('Microsoft.Insights/default', variables('logAnalyticsWorkspace'))]",
-                    "dependsOn": [
-                        "[resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancer').name)]",
-                        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspace'))]"
-                    ],
-                    "properties": {
-                        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspace'))]",
-                        "metrics": [
-                            {
-                                "category": "AllMetrics",
-                                "enabled": true
-                            }
-                        ]
-                    }
-                }
-            ]
+            }
         }
-
     ],
     "outputs": {
         "vpnIp": {
